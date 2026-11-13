@@ -12,7 +12,8 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "build:share": "node scripts/build-share.mjs"
+    "build:static": "vite build --config web/vite.config.ts",
+    "preview:static": "vite preview --config web/vite.config.ts"
   },
   "overrides": {
     "rolldown": "1.2.1"
