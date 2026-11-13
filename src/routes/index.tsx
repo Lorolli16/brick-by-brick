@@ -145,7 +145,7 @@ function ApproveTab({ items, onResolve }: { items: typeof approvalsSeed; onResol
               {err && <p className="text-xs text-destructive">{err}</p>}
               <button className={`${btn} bg-destructive text-destructive-foreground`} onClick={() => {
                 const r = commentSchema.safeParse(note);
-                if (!r.success) return setErr(r.error.issues[0].message);
+                if (!r.success) return setErr(r.error.issues[0]?.message ?? "Invalid note");
                 setErr(""); setNote(""); setOpen(null); onResolve(a.id, `Sent back to ${a.who} with your note.`);
               }}>Send</button>
             </div>
