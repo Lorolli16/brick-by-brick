@@ -25,8 +25,9 @@ There are two builds of the same app:
 | Static site (browser only) | `npm run build:static` | GitHub Pages or any static file host |
 
 **GitHub Pages** deploys automatically on every push to `main`
-(`.github/workflows/deploy-pages.yml`). One-time setup: repo **Settings → Pages →
-Build and deployment → Source: GitHub Actions**. The static build reads `BASE_PATH`
+(`.github/workflows/deploy-pages.yml`), which publishes the built site to the
+`gh-pages` branch. If Pages is not on yet: repo **Settings → Pages →
+Source: Deploy from a branch → gh-pages / (root)**. The static build reads `BASE_PATH`
 (set to `/brick-by-brick/` by the workflow) so links work under the repo's sub-path.
 
 ## How data works
