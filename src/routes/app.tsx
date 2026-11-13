@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Home, CheckCheck, Repeat, Trophy, Ticket, ShieldCheck, Flame, Globe, Users, Building2, UserRound } from "lucide-react";
-import logoUrl from "@/assets/logo.svg";
+import logoUrl from "@/assets/logo.png";
 const logo = { url: logoUrl };
 import { commentSchema, createRateLimiter } from "@/lib/safety";
 import {
