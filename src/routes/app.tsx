@@ -1,7 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Home, CheckCheck, Repeat, Trophy, Ticket, ShieldCheck, Flame, Globe, Users, Building2, UserRound } from "lucide-react";
-const logo = { url: "/logo.svg" };
+import logoUrl from "@/assets/logo.svg";
+const logo = { url: logoUrl };
 import { commentSchema, createRateLimiter } from "@/lib/safety";
 import {
   DAYS, ME, PEOPLE, clearAllStored, removeStored, todayName,
@@ -329,6 +330,7 @@ function HouseTab({ week }: { week: Assignment[] }) {
 
 const avatars = ["🧱", "🦊", "🐼", "🌵", "🎧", "🍕", "🚲", "🌻"];
 function ProfileTab({ onSafety, onSave }: { onSafety: () => void; onSave: () => void }) {
+  const nav = useNavigate();
   const [saved, setSaved] = useProfile();
   const [account] = useAccount();
   const [savedAway, setSavedAway] = useVacation();
@@ -391,7 +393,7 @@ function ProfileTab({ onSafety, onSave }: { onSafety: () => void; onSave: () => 
         <p className="text-xs text-muted-foreground">Your chores and profile are saved on this device only, until real accounts arrive.</p>
         {confirmClear ? (
           <div className="mt-2 flex gap-2">
-            <button onClick={() => { clearAllStored(); window.location.assign("/"); }} className={`${btn} flex-1 bg-destructive text-destructive-foreground`}>Yes, clear it all</button>
+            <button onClick={() => { clearAllStored(); nav({ to: "/" }); }} className={`${btn} flex-1 bg-destructive text-destructive-foreground`}>Yes, clear it all</button>
             <button onClick={() => setConfirmClear(false)} className={`${btn} flex-1 bg-muted text-foreground`}>Keep it</button>
           </div>
         ) : (
