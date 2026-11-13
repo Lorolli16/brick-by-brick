@@ -132,14 +132,10 @@ Single light theme (there is no dark mode in the current app).
 
 ## 5. Navigation map
 
-```
-Sign in / Sign up  ──(Sign up)──▶  Find your flat (Step 1 of 3)  ──▶  Chore setup (Step 2 of 3)  ──▶  First fair week (Step 3 of 3)  ──▶  App
-        │                                                                                                                          ▲
-        └──────────────────────────────────────(Log in)──────────────────────────────────────────────────────────────────────────────┘
-App tabs (bottom nav): My week · House · Approvals · Swaps · Leaderboard · Chips · Me
-Hidden screen: Safety checklist (opened from Me)
-```
-
+- **Sign up flow:** Sign in / Sign up → Find your flat (Step 1 of 3) → Chore setup (Step 2 of 3) → First fair week (Step 3 of 3) → App.
+- **Log in flow:** Sign in / Sign up → App.
+- **App tabs (bottom nav):** My week · House · Approvals · Swaps · Leaderboard · Chips · Me.
+- **Hidden screen:** Safety checklist (opened from Me).
 - URLs: `/` sign-in, `/join`, `/setup`, `/app` (tabs switch inside `/app` without changing the URL).
 - Someone who has already signed up on the device and opens the site root goes straight to `/app`.
 - **Log out** (header link) returns to sign-in and forgets the account, but keeps the flat's data.
