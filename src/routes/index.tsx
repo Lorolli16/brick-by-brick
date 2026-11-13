@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import logo from "@/assets/brick_by_brick_logo.png.asset.json";
 import { emailSchema, passwordSchema } from "@/lib/safety";
+import { readStored, writeStored, accountSchema, DEFAULT_PROFILE, profileSchema } from "@/lib/store";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -38,6 +39,15 @@ function Auth() {
     const e1 = emailSchema.safeParse(email); if (!e1.success) return setErr(e1.error.issues[0]?.message ?? "");
     const p1 = passwordSchema.safeParse(pw); if (!p1.success) return setErr(p1.error.issues[0]?.message ?? "");
     setErr("");
+    // Saved on this device only; the password is never stored.
+    const cleanEmail = e1.data.toLowerCase();
+    const existing = readStored("account", null, accountSchema);
+    const displayName = mode === "up"
+      ? name.trim().replace(/[<>]/g, "").slice(0, 40)
+      : existing?.email === cleanEmail ? existing.name : (cleanEmail.split("@")[0] ?? "").replace(/[<>]/g, "").slice(0, 40);
+    writeStored("account", { name: displayName, email: cleanEmail });
+    const profile = readStored("profile", DEFAULT_PROFILE, profileSchema);
+    if (mode === "up" || !profile.name) writeStored("profile", { ...profile, name: displayName });
     nav({ to: mode === "up" ? "/join" : "/app" });
   };
 

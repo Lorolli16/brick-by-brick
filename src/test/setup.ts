@@ -18,3 +18,12 @@ Object.defineProperty(window, "matchMedia", {
     dispatchEvent: () => {},
   }),
 });
+
+// Node 25+ ships its own experimental localStorage/sessionStorage globals, which hide
+// jsdom's working ones in tests. Put jsdom's back.
+declare const jsdom: { window: Window } | undefined;
+if (typeof jsdom !== "undefined") {
+  for (const k of ["localStorage", "sessionStorage"] as const) {
+    Object.defineProperty(globalThis, k, { configurable: true, value: jsdom.window[k] });
+  }
+}

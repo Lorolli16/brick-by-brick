@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Minus, Plus, Trash2 } from "lucide-react";
+import { PEOPLE, splitWeek, useSetupChores, useVacation, useWeek } from "@/lib/store";
 
 export const Route = createFileRoute("/setup")({
   head: () => ({
@@ -16,16 +17,12 @@ export const Route = createFileRoute("/setup")({
   component: Setup,
 });
 
-const seed = [
-  ["Deep clean bathroom", 10], ["Deep clean kitchen", 9], ["Clean fridge", 7], ["Mop floors", 7],
-  ["Sort recycling", 6], ["Shared laundry", 5], ["Wash dishes", 5], ["Vacuum or sweep", 4],
-  ["Kitchen surfaces", 3], ["Balcony", 3], ["General waste", 2], ["Plants & living room", 2],
-] as const;
-
 function Setup() {
   const [step, setStep] = useState<2 | 3>(2);
-  const [chores, setChores] = useState(seed.map(([n, p]) => ({ n: n as string, p: p as number, on: true })));
-  const [away, setAway] = useState(false);
+  const [chores, setChores] = useSetupChores();
+  const [away, setAway] = useVacation();
+  const [, setWeek] = useWeek();
+  const week = useMemo(() => splitWeek(chores.filter((c) => c.on)), [chores]);
   const [newName, setNewName] = useState("");
   const [newPts, setNewPts] = useState(3);
   const [addErr, setAddErr] = useState("");
@@ -36,7 +33,7 @@ function Setup() {
     setChores((c) => [...c, { n, p: newPts, on: true }]); setNewName(""); setNewPts(3); setAddErr("");
   };
   const total = chores.filter((c) => c.on).reduce((s, c) => s + c.p, 0);
-  const people = 4;
+  const people = PEOPLE.length;
   const bump = (i: number, d: number) => setChores((c) => c.map((x, j) => (j === i ? { ...x, p: Math.min(10, Math.max(1, x.p + d)) } : x)));
 
   return (
@@ -79,20 +76,23 @@ function Setup() {
           <h1 className="mt-3 text-2xl font-bold">Your first fair week 🧱</h1>
           <p className="mt-1 text-sm text-muted-foreground">{total} points split across {people} flatmates — about {Math.round(total / people)} each.</p>
           <div className="mt-5 space-y-3">
-            {[["You", "Bathroom, Plants", 12], ["Marta", "Kitchen, Waste", 11], ["Jordi", "Fridge, Laundry", 12], ["Aisha", "Floors, Surfaces", 10]].map(([n, c, p]) => (
-              <div key={n as string} className="flex items-center gap-3 rounded-2xl bg-card p-4 shadow-[var(--shadow-soft)]">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary font-semibold text-primary-foreground">{(n as string)[0]}</span>
-                <span className="flex-1"><span className="block font-semibold">{n}</span><span className="text-xs text-muted-foreground">{c}</span></span>
-                <span className="font-display font-bold text-primary">{p} pts</span>
-              </div>
-            ))}
+            {PEOPLE.map((n) => {
+              const mine = week.filter((a) => a.who === n);
+              return (
+                <div key={n} className="flex items-center gap-3 rounded-2xl bg-card p-4 shadow-[var(--shadow-soft)]">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary font-semibold text-primary-foreground">{n[0]}</span>
+                  <span className="flex-1"><span className="block font-semibold">{n}</span><span className="text-xs text-muted-foreground">{mine.map((a) => a.name).join(", ") || "Nothing this week"}</span></span>
+                  <span className="font-display font-bold text-primary">{mine.reduce((s, a) => s + a.pts, 0)} pts</span>
+                </div>
+              );
+            })}
           </div>
         </>
       )}
       <div className="fixed inset-x-0 bottom-0 mx-auto max-w-md bg-background px-6 py-4">
         {step === 2
-          ? <button onClick={() => setStep(3)} className="w-full rounded-full bg-primary py-3 text-sm font-semibold text-primary-foreground">Generate first week · {total} pts</button>
-          : <Link to="/app" className="block w-full rounded-full bg-primary py-3 text-center text-sm font-semibold text-primary-foreground">Let's go!</Link>}
+          ? <button onClick={() => setStep(3)} disabled={total === 0} className="disabled:opacity-40 w-full rounded-full bg-primary py-3 text-sm font-semibold text-primary-foreground">Generate first week · {total} pts</button>
+          : <Link to="/app" onClick={() => setWeek(week)} className="block w-full rounded-full bg-primary py-3 text-center text-sm font-semibold text-primary-foreground">Let's go!</Link>}
       </div>
     </div>
   );

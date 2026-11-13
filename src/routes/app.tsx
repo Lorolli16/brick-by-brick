@@ -3,6 +3,11 @@ import { useMemo, useState } from "react";
 import { Home, CheckCheck, Repeat, Trophy, Ticket, ShieldCheck, Flame, Globe, Users, Building2, UserRound } from "lucide-react";
 import logo from "@/assets/brick_by_brick_logo.png.asset.json";
 import { commentSchema, createRateLimiter } from "@/lib/safety";
+import {
+  DAYS, ME, PEOPLE, clearAllStored, removeStored, todayName,
+  useAccount, useApprovals, useFlat, useProfile, useVacation, useWeek,
+  type Approval, type Assignment,
+} from "@/lib/store";
 
 export const Route = createFileRoute("/app")({
   head: () => ({
@@ -18,16 +23,7 @@ export const Route = createFileRoute("/app")({
   component: App,
 });
 
-type Chore = { id: number; name: string; pts: number; due: string; note?: string; status: "todo" | "done" | "approved" };
-const initialChores: Chore[] = [
-  { id: 1, name: "Deep clean bathroom", pts: 10, due: "Today", note: "Limescale: use vinegar", status: "todo" },
-  { id: 2, name: "Sort and take out recycling", pts: 6, due: "Wed", status: "todo" },
-  { id: 3, name: "Water plants & tidy living room", pts: 2, due: "Fri", status: "approved" },
-];
-const approvalsSeed = [
-  { id: 1, who: "Marta", chore: "Mop floors (whole flat)", pts: 7 },
-  { id: 2, who: "Jordi", chore: "Wash dishes (big load)", pts: 5 },
-];
+// Leaderboards, swaps and chips stay sample data: they need other people's activity (real accounts).
 const flat = [
   { name: "Marta", pts: 21 }, { name: "You", pts: 18 }, { name: "Jordi", pts: 15 }, { name: "Aisha", pts: 12 },
 ];
@@ -56,8 +52,10 @@ const btn = "rounded-full px-4 py-2 text-sm font-semibold transition active:scal
 
 function App() {
   const [tab, setTab] = useState<Tab>("home");
-  const [chores, setChores] = useState(initialChores);
-  const [approvals, setApprovals] = useState(approvalsSeed);
+  const [week, setWeek] = useWeek();
+  const [approvals, setApprovals] = useApprovals();
+  const [flatInfo] = useFlat();
+  const chores = useMemo(() => week.filter((a) => a.who === ME), [week]);
   const [toast, setToast] = useState("");
   const limiter = useMemo(() => createRateLimiter(5, 60000), []);
   const say = (m: string) => { setToast(m); setTimeout(() => setToast(""), 2500); };
@@ -69,23 +67,23 @@ function App() {
         <div className="flex items-center gap-2">
           <img src={logo.url} alt="Brick by Brick logo" className="h-10 w-10 rounded-xl" />
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-rust">Casa Eixample</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-rust">{flatInfo.name}</p>
             <h1 className="text-xl font-bold text-primary">Brick by Brick</h1>
           </div>
         </div>
         <div className="flex items-center gap-1 rounded-full bg-accent px-3 py-1 text-sm font-semibold text-accent-foreground">
           <Flame className="h-4 w-4" /> 6 wks
         </div>
-        <Link to="/" className="ml-2 text-xs font-semibold text-muted-foreground">Log out</Link>
+        <Link to="/" onClick={() => removeStored("account")} className="ml-2 text-xs font-semibold text-muted-foreground">Log out</Link>
       </header>
       <main className="space-y-4 px-5 pt-2">
-        {tab === "home" && <HomeTab chores={chores} onDone={(id) => guarded(() => { setChores((c) => c.map((x) => (x.id === id ? { ...x, status: "done" } : x))); say("Nice! Sent to your roommates for a thumbs up."); })()} />}
+        {tab === "home" && <HomeTab chores={chores} onDone={(id) => guarded(() => { setWeek((w) => w.map((x) => (x.id === id ? { ...x, status: "done" as const } : x))); say("Nice! Sent to your roommates for a thumbs up."); })()} />}
         {tab === "approve" && <ApproveTab items={approvals} onResolve={(id, msg) => guarded(() => { setApprovals((a) => a.filter((x) => x.id !== id)); say(msg); })()} />}
         {tab === "swap" && <SwapTab onOffer={() => guarded(() => say("Offer posted! It expires in 24 hours."))()} />}
         {tab === "board" && <BoardTab />}
         {tab === "chips" && <ChipsTab />}
         {tab === "safety" && <SafetyTab />}
-        {tab === "house" && <HouseTab />}
+        {tab === "house" && <HouseTab week={week} />}
         {tab === "profile" && <ProfileTab onSafety={() => setTab("safety")} onSave={() => say("Profile saved! Looking sharp. ✨")} />}
       </main>
       {toast && <div role="status" className="fixed inset-x-5 bottom-24 mx-auto max-w-sm rounded-xl bg-foreground px-4 py-3 text-center text-sm text-background">{toast}</div>}
@@ -100,10 +98,13 @@ function App() {
   );
 }
 
-function HomeTab({ chores, onDone }: { chores: Chore[]; onDone: (id: number) => void }) {
+function HomeTab({ chores: mine, onDone }: { chores: Assignment[]; onDone: (id: number) => void }) {
+  const today = todayName();
+  const chores = [...mine].sort((a, b) => DAYS.indexOf(a.day) - DAYS.indexOf(b.day));
   const total = chores.reduce((s, c) => s + c.pts, 0);
   const done = chores.filter((c) => c.status !== "todo").reduce((s, c) => s + c.pts, 0);
-  const pct = done / total;
+  const pct = total ? done / total : 0;
+  const dueToday = chores.find((c) => c.day === today && c.status === "todo");
   return (
     <>
       <div className={`${card} flex items-center gap-5`}>
@@ -113,16 +114,17 @@ function HomeTab({ chores, onDone }: { chores: Chore[]; onDone: (id: number) => 
         </svg>
         <div>
           <p className="font-display text-3xl font-bold">{done}<span className="text-lg text-muted-foreground">/{total} pts</span></p>
-          <p className="text-sm text-muted-foreground">Your turn: bathroom day! 🛁</p>
+          <p className="text-sm text-muted-foreground">{dueToday ? `Today: ${dueToday.name} 🧽` : "Nothing due today 😎"}</p>
           <p className="mt-1 inline-block rounded-full bg-accent px-2 py-0.5 text-xs font-semibold text-accent-foreground">Skip Pass active</p>
         </div>
       </div>
       <h2 className="pt-2 text-lg font-semibold">This week</h2>
+      {!chores.length && <p className={`${card} text-center text-muted-foreground`}>No chores for you this week 🎉</p>}
       {chores.map((c) => (
-        <div key={c.id} className={`${card} flex items-center justify-between ${c.due === "Today" && c.status === "todo" ? "ring-2 ring-primary" : ""}`}>
+        <div key={c.id} className={`${card} flex items-center justify-between ${c.day === today && c.status === "todo" ? "ring-2 ring-primary" : ""}`}>
           <div>
             <p className="font-semibold">{c.name}</p>
-            <p className="text-xs text-muted-foreground">{c.pts} pts · {c.due}{c.note ? ` · ${c.note}` : ""}</p>
+            <p className="text-xs text-muted-foreground">{c.pts} pts · {c.day === today ? "Today" : c.day}</p>
           </div>
           {c.status === "todo" ? (
             <button onClick={() => onDone(c.id)} className={`${btn} bg-primary text-primary-foreground`}>Done</button>
@@ -135,7 +137,7 @@ function HomeTab({ chores, onDone }: { chores: Chore[]; onDone: (id: number) => 
   );
 }
 
-function ApproveTab({ items, onResolve }: { items: typeof approvalsSeed; onResolve: (id: number, msg: string) => void }) {
+function ApproveTab({ items, onResolve }: { items: Approval[]; onResolve: (id: number, msg: string) => void }) {
   const [open, setOpen] = useState<number | null>(null);
   const [note, setNote] = useState("");
   const [err, setErr] = useState("");
@@ -266,23 +268,18 @@ function SafetyTab() {
   );
 }
 
-const people = [
-  { name: "You", color: "bg-primary text-primary-foreground" },
-  { name: "Marta", color: "bg-rust text-primary-foreground" },
-  { name: "Jordi", color: "bg-accent text-accent-foreground" },
-  { name: "Aisha", color: "bg-secondary text-secondary-foreground" },
-];
-const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
-const plan: Record<string, Record<string, string[]>> = {
-  You: { Mon: ["Plants & living room"], Wed: ["Sort recycling"], Fri: ["Deep clean bathroom"] },
-  Marta: { Mon: ["Kitchen surfaces"], Tue: ["Mop floors"], Thu: ["General waste"], Sat: ["Deep clean kitchen"] },
-  Jordi: { Tue: ["Wash dishes"], Thu: ["Shared laundry"], Sun: ["Clean fridge"] },
-  Aisha: { Mon: ["Vacuum or sweep"], Wed: ["Balcony"], Fri: ["Kitchen surfaces"], Sun: ["General waste"] },
-};
+const colors = ["bg-primary text-primary-foreground", "bg-rust text-primary-foreground", "bg-accent text-accent-foreground", "bg-secondary text-secondary-foreground"];
+const people = PEOPLE.map((name, i) => ({ name, color: colors[i % colors.length] }));
+const days = DAYS;
 
-function HouseTab() {
+function HouseTab({ week }: { week: Assignment[] }) {
   const [view, setView] = useState<"day" | "week">("day");
-  const today = days[(new Date().getDay() + 6) % 7];
+  const today = todayName();
+  const plan = useMemo(() => {
+    const p: Record<string, Record<string, string[]>> = Object.fromEntries(PEOPLE.map((n) => [n, {}]));
+    week.forEach((a) => { const mine = (p[a.who] ??= {}); mine[a.day] = [...(mine[a.day] ?? []), a.name]; });
+    return p;
+  }, [week]);
   const [day, setDay] = useState<string>(today);
   return (
     <>
@@ -299,7 +296,7 @@ function HouseTab() {
             ))}
           </div>
           {people.map((p) => {
-            const list = plan[p.name][day] ?? [];
+            const list = plan[p.name]?.[day] ?? [];
             return (
               <div key={p.name} className={`${card} flex items-start gap-3`}>
                 <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-semibold ${p.color}`}>{p.name[0]}</span>
@@ -319,7 +316,7 @@ function HouseTab() {
               {days.map((d) => (
                 <tr key={d} className={`border-t ${d === today ? "bg-secondary" : ""}`}>
                   <td className="p-1 font-semibold">{d}</td>
-                  {people.map((p) => <td key={p.name} className="p-1 align-top text-muted-foreground">{(plan[p.name][d] ?? ["—"]).join(", ")}</td>)}
+                  {people.map((p) => <td key={p.name} className="p-1 align-top text-muted-foreground">{(plan[p.name]?.[d] ?? ["—"]).join(", ")}</td>)}
                 </tr>
               ))}
             </tbody>
@@ -332,14 +329,19 @@ function HouseTab() {
 
 const avatars = ["🧱", "🦊", "🐼", "🌵", "🎧", "🍕", "🚲", "🌻"];
 function ProfileTab({ onSafety, onSave }: { onSafety: () => void; onSave: () => void }) {
-  const [name, setName] = useState("Lorenzo");
-  const [bio, setBio] = useState("Bathroom king, plant whisperer.");
-  const [avatar, setAvatar] = useState("🧱");
-  const [likes, setLikes] = useState<string[]>(["Plants & living room"]);
-  const [hidden, setHidden] = useState(false);
-  const [notify, setNotify] = useState(true);
-  const [away, setAway] = useState(false);
+  const [saved, setSaved] = useProfile();
+  const [account] = useAccount();
+  const [savedAway, setSavedAway] = useVacation();
+  // Edits are a draft until "Save profile".
+  const [name, setName] = useState(saved.name || account?.name || "");
+  const [bio, setBio] = useState(saved.bio);
+  const [avatar, setAvatar] = useState(saved.avatar);
+  const [likes, setLikes] = useState<string[]>(saved.likes);
+  const [hidden, setHidden] = useState(saved.hidden);
+  const [notify, setNotify] = useState(saved.notify);
+  const [away, setAway] = useState(savedAway);
   const [err, setErr] = useState("");
+  const [confirmClear, setConfirmClear] = useState(false);
   const pref = ["Deep clean bathroom", "Wash dishes", "Plants & living room", "Shared laundry", "Mop floors", "Sort recycling"];
   const toggle = (label: string, v: boolean, set: (b: boolean) => void, sub: string) => (
     <label className={`${card} flex items-center justify-between`}>
@@ -375,11 +377,27 @@ function ProfileTab({ onSafety, onSave }: { onSafety: () => void; onSave: () => 
       {toggle("Hide me from global leaderboard", hidden, setHidden, "Your flat still sees your points")}
       <button onClick={onSafety} className={`${card} flex w-full items-center gap-2 text-left font-semibold`}><ShieldCheck className="h-5 w-5 text-primary" />Safety & privacy checklist</button>
       <button onClick={() => {
-        const r = commentSchema.safeParse(bio);
         if (name.trim().length < 2) return setErr("Your name needs at least 2 letters.");
-        if (!r.success) return setErr(r.error.issues[0]?.message ?? "Check your About me");
-        setErr(""); onSave();
+        if (/[<>]/.test(name)) return setErr("Please avoid < and > in your name.");
+        const cleanBio = bio.trim();
+        const r = commentSchema.safeParse(cleanBio);
+        if (cleanBio && !r.success) return setErr(r.error.issues[0]?.message ?? "Check your About me");
+        setErr("");
+        setSaved({ name: name.trim(), bio: cleanBio, avatar, likes, hidden, notify });
+        setSavedAway(away);
+        onSave();
       }} className={`${btn} w-full bg-primary py-3 text-primary-foreground`}>Save profile</button>
+      <div className={`${card} text-center`}>
+        <p className="text-xs text-muted-foreground">Your chores and profile are saved on this device only, until real accounts arrive.</p>
+        {confirmClear ? (
+          <div className="mt-2 flex gap-2">
+            <button onClick={() => { clearAllStored(); window.location.assign("/"); }} className={`${btn} flex-1 bg-destructive text-destructive-foreground`}>Yes, clear it all</button>
+            <button onClick={() => setConfirmClear(false)} className={`${btn} flex-1 bg-muted text-foreground`}>Keep it</button>
+          </div>
+        ) : (
+          <button onClick={() => setConfirmClear(true)} className="mt-2 text-xs font-semibold text-destructive">Clear data on this device</button>
+        )}
+      </div>
     </>
   );
 }

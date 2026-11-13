@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { QrCode, KeyRound, Home, ArrowLeft, Camera } from "lucide-react";
 import { joinCodeSchema } from "@/lib/safety";
+import { DEFAULT_FLAT, newJoinCode, useFlat } from "@/lib/store";
 
 export const Route = createFileRoute("/join")({
   head: () => ({
@@ -26,6 +27,7 @@ function Join() {
   const [chars, setChars] = useState(Array(6).fill(""));
   const [err, setErr] = useState("");
   const [tries, setTries] = useState(0);
+  const [, setFlat] = useFlat();
   const refs = useRef<(HTMLInputElement | null)[]>([]);
 
   const setChar = (i: number, v: string) => {
@@ -96,7 +98,7 @@ function Join() {
         </>
       )}
 
-      {view === "create" && <CreateFlat onDone={() => nav({ to: "/setup" })} />}
+      {view === "create" && <CreateFlat onDone={(flat) => { setFlat(flat); nav({ to: "/setup" }); }} />}
 
       {view === "found" && (
         <div className={`${card} mt-8 text-center`}>
@@ -106,7 +108,10 @@ function Join() {
           <div className="mt-4 flex justify-center -space-x-2">
             {["M", "J", "A"].map((l) => <span key={l} className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-card bg-primary font-semibold text-primary-foreground">{l}</span>)}
           </div>
-          <Link to="/setup" className={`${btn} mt-6 block bg-primary text-primary-foreground`}>Join Casa Eixample</Link>
+          <Link to="/setup" onClick={() => {
+            const typed = joinCodeSchema.safeParse(chars.join(""));
+            setFlat({ name: DEFAULT_FLAT.name, code: typed.success ? typed.data : DEFAULT_FLAT.code });
+          }} className={`${btn} mt-6 block bg-primary text-primary-foreground`}>Join Casa Eixample</Link>
         </div>
       )}
     </div>
@@ -122,9 +127,9 @@ function Option({ icon: Icon, title, sub, onClick, accent }: { icon: typeof QrCo
   );
 }
 
-function CreateFlat({ onDone }: { onDone: () => void }) {
+function CreateFlat({ onDone }: { onDone: (flat: { name: string; code: string }) => void }) {
   const [name, setName] = useState("");
-  const code = "K7B2XQ";
+  const [code] = useState(newJoinCode);
   return (
     <>
       <h1 className="mt-3 text-2xl font-bold">Name your flat</h1>
@@ -137,7 +142,7 @@ function CreateFlat({ onDone }: { onDone: () => void }) {
           <p className="mt-1 text-xs text-muted-foreground">Code expires in 7 days</p>
         </div>
       )}
-      <button disabled={!name.trim()} onClick={onDone} className={`${btn} mt-5 bg-primary text-primary-foreground disabled:opacity-40`}>Continue</button>
+      <button disabled={!name.trim()} onClick={() => onDone({ name: name.trim().replace(/[<>]/g, ""), code })} className={`${btn} mt-5 bg-primary text-primary-foreground disabled:opacity-40`}>Continue</button>
     </>
   );
 }
