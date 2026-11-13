@@ -56,6 +56,7 @@
   --color-border: var(--border);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
+  --color-rust: var(--rust);
   --font-display: "Poppins", sans-serif;
   --font-sans: "Inter", sans-serif;
   --shadow-soft: var(--shadow-soft);
@@ -79,40 +80,41 @@
 
 :root {
   --radius: 1rem;
-  --background: oklch(0.97 0.007 85);
+  --background: oklch(0.975 0.006 75);
   --foreground: oklch(0.29 0.014 260);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.29 0.014 260);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.29 0.014 260);
-  --primary: oklch(0.65 0.11 182);
+  --primary: oklch(0.32 0.075 250);
   --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.94 0.02 182);
-  --secondary-foreground: oklch(0.35 0.07 182);
+  --secondary: oklch(0.94 0.025 35);
+  --secondary-foreground: oklch(0.45 0.12 32);
   --muted: oklch(0.94 0.008 85);
   --muted-foreground: oklch(0.5 0.015 260);
-  --accent: oklch(0.86 0.16 85);
-  --accent-foreground: oklch(0.3 0.05 70);
+  --accent: oklch(0.64 0.13 65);
+  --accent-foreground: oklch(0.99 0 0);
   --success: oklch(0.68 0.12 155);
   --success-foreground: oklch(0.99 0 0);
-  --destructive: oklch(0.68 0.16 30);
+  --destructive: oklch(0.47 0.13 32);
   --destructive-foreground: oklch(0.99 0 0);
   --border: oklch(0.9 0.01 85);
   --input: oklch(0.9 0.01 85);
-  --ring: oklch(0.65 0.11 182);
-  --chart-1: oklch(0.65 0.11 182);
+  --ring: oklch(0.32 0.075 250);
+  --chart-1: oklch(0.32 0.075 250);
   --chart-2: oklch(0.86 0.16 85);
   --chart-3: oklch(0.68 0.12 155);
   --chart-4: oklch(0.68 0.16 30);
   --chart-5: oklch(0.5 0.015 260);
   --sidebar: oklch(1 0 0);
   --sidebar-foreground: oklch(0.29 0.014 260);
-  --sidebar-primary: oklch(0.65 0.11 182);
+  --sidebar-primary: oklch(0.32 0.075 250);
   --sidebar-primary-foreground: oklch(0.99 0 0);
   --sidebar-accent: oklch(0.94 0.02 182);
   --sidebar-accent-foreground: oklch(0.35 0.07 182);
   --sidebar-border: oklch(0.9 0.01 85);
-  --sidebar-ring: oklch(0.65 0.11 182);
+  --sidebar-ring: oklch(0.32 0.075 250);
+  --rust: oklch(0.47 0.13 32);
   --shadow-soft: 0 8px 24px -12px color-mix(in oklab, var(--foreground) 25%, transparent);
 }
 

@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Minus, Plus } from "lucide-react";
+import { Minus, Plus, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/setup")({
   head: () => ({
@@ -24,8 +24,17 @@ const seed = [
 
 function Setup() {
   const [step, setStep] = useState<2 | 3>(2);
-  const [chores, setChores] = useState(seed.map(([n, p]) => ({ n, p: p as number, on: true })));
+  const [chores, setChores] = useState(seed.map(([n, p]) => ({ n: n as string, p: p as number, on: true })));
   const [away, setAway] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newPts, setNewPts] = useState(3);
+  const [addErr, setAddErr] = useState("");
+  const addChore = () => {
+    const n = newName.trim().replace(/[<>]/g, "");
+    if (n.length < 2) return setAddErr("Give the chore a name (2+ letters).");
+    if (chores.some((c) => c.n.toLowerCase() === n.toLowerCase())) return setAddErr("That chore is already on the list.");
+    setChores((c) => [...c, { n, p: newPts, on: true }]); setNewName(""); setNewPts(3); setAddErr("");
+  };
   const total = chores.filter((c) => c.on).reduce((s, c) => s + c.p, 0);
   const people = 4;
   const bump = (i: number, d: number) => setChores((c) => c.map((x, j) => (j === i ? { ...x, p: Math.min(10, Math.max(1, x.p + d)) } : x)));
@@ -45,8 +54,20 @@ function Setup() {
                 <button onClick={() => bump(i, -1)} aria-label="Less" className="rounded-full bg-muted p-1"><Minus className="h-3 w-3" /></button>
                 <span className="w-6 text-center font-display font-bold text-primary">{c.p}</span>
                 <button onClick={() => bump(i, 1)} aria-label="More" className="rounded-full bg-muted p-1"><Plus className="h-3 w-3" /></button>
+                <button onClick={() => setChores((x) => x.filter((_, j) => j !== i))} aria-label={`Remove ${c.n}`} className="rounded-full p-1 text-destructive"><Trash2 className="h-4 w-4" /></button>
               </div>
             ))}
+          </div>
+          <div className="mt-3 rounded-2xl border-2 border-dashed bg-card p-3">
+            <p className="text-sm font-semibold">Add a chore your flat has</p>
+            <div className="mt-2 flex items-center gap-2">
+              <input value={newName} maxLength={40} onChange={(e) => setNewName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addChore()} placeholder="e.g. Clean the terrace" className="flex-1 rounded-xl border bg-background px-3 py-2 text-sm" />
+              <button onClick={() => setNewPts((v) => Math.max(1, v - 1))} aria-label="Fewer points" className="rounded-full bg-muted p-1"><Minus className="h-3 w-3" /></button>
+              <span className="w-5 text-center font-display font-bold text-primary">{newPts}</span>
+              <button onClick={() => setNewPts((v) => Math.min(10, v + 1))} aria-label="More points" className="rounded-full bg-muted p-1"><Plus className="h-3 w-3" /></button>
+            </div>
+            {addErr && <p className="mt-1 text-xs text-destructive">{addErr}</p>}
+            <button onClick={addChore} className="mt-2 w-full rounded-full bg-secondary py-2 text-sm font-semibold text-secondary-foreground">+ Add chore</button>
           </div>
           <label className="mt-5 flex items-center justify-between rounded-2xl bg-card p-4 shadow-[var(--shadow-soft)]">
             <span><span className="block font-semibold">Vacation mode</span><span className="text-xs text-muted-foreground">Pauses your chores, keeps your streak</span></span>

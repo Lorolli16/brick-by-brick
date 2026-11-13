@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import logo from "@/assets/brick_by_brick_logo.png.asset.json";
 import { emailSchema, passwordSchema } from "@/lib/safety";
 
 export const Route = createFileRoute("/")({
@@ -20,16 +21,7 @@ const field = "w-full rounded-xl border bg-card px-4 py-3 text-sm outline-none f
 const btn = "w-full rounded-full py-3 text-sm font-semibold transition active:scale-95";
 
 function Bricks() {
-  const rows = [[1, 1, 1], [1, 1], [1]];
-  return (
-    <div className="flex flex-col items-center gap-1" aria-hidden>
-      {rows.reverse().map((r, i) => (
-        <div key={i} className="flex gap-1">
-          {r.map((_, j) => <div key={j} className={`h-5 w-10 rounded-md ${(i + j) % 2 ? "bg-accent" : "bg-primary"}`} />)}
-        </div>
-      ))}
-    </div>
-  );
+  return <img src={logo.url} alt="Brick by Brick logo" className="mx-auto h-24 w-24 rounded-3xl shadow-[var(--shadow-soft)]" />;
 }
 
 function Auth() {

@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Home, CheckCheck, Repeat, Trophy, Ticket, ShieldCheck, Flame, Globe, Users } from "lucide-react";
+import { Home, CheckCheck, Repeat, Trophy, Ticket, ShieldCheck, Flame, Globe, Users, Building2, UserRound } from "lucide-react";
+import logo from "@/assets/brick_by_brick_logo.png.asset.json";
 import { commentSchema, createRateLimiter } from "@/lib/safety";
 
 export const Route = createFileRoute("/app")({
@@ -41,13 +42,14 @@ const global = [
 
 const tabs = [
   { id: "home", label: "My week", icon: Home },
+  { id: "house", label: "House", icon: Building2 },
   { id: "approve", label: "Approvals", icon: CheckCheck },
   { id: "swap", label: "Swaps", icon: Repeat },
   { id: "board", label: "Leaderboard", icon: Trophy },
   { id: "chips", label: "Chips", icon: Ticket },
-  { id: "safety", label: "Safety", icon: ShieldCheck },
+  { id: "profile", label: "Me", icon: UserRound },
 ] as const;
-type Tab = (typeof tabs)[number]["id"];
+type Tab = (typeof tabs)[number]["id"] | "safety";
 
 const card = "rounded-2xl bg-card p-4 shadow-[var(--shadow-soft)]";
 const btn = "rounded-full px-4 py-2 text-sm font-semibold transition active:scale-95";
@@ -64,9 +66,12 @@ function App() {
   return (
     <div className="mx-auto min-h-screen max-w-md bg-background pb-28">
       <header className="flex items-center justify-between px-5 pt-6 pb-2">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-primary">Casa Eixample</p>
-          <h1 className="text-2xl font-bold">Brick by Brick</h1>
+        <div className="flex items-center gap-2">
+          <img src={logo.url} alt="Brick by Brick logo" className="h-10 w-10 rounded-xl" />
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-rust">Casa Eixample</p>
+            <h1 className="text-xl font-bold text-primary">Brick by Brick</h1>
+          </div>
         </div>
         <div className="flex items-center gap-1 rounded-full bg-accent px-3 py-1 text-sm font-semibold text-accent-foreground">
           <Flame className="h-4 w-4" /> 6 wks
@@ -80,11 +85,13 @@ function App() {
         {tab === "board" && <BoardTab />}
         {tab === "chips" && <ChipsTab />}
         {tab === "safety" && <SafetyTab />}
+        {tab === "house" && <HouseTab />}
+        {tab === "profile" && <ProfileTab onSafety={() => setTab("safety")} onSave={() => say("Profile saved! Looking sharp. ✨")} />}
       </main>
       {toast && <div role="status" className="fixed inset-x-5 bottom-24 mx-auto max-w-sm rounded-xl bg-foreground px-4 py-3 text-center text-sm text-background">{toast}</div>}
       <nav className="fixed inset-x-0 bottom-0 mx-auto flex max-w-md justify-around border-t bg-card py-2">
         {tabs.map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id)} className={`flex flex-col items-center gap-0.5 px-1 text-[11px] ${tab === t.id ? "text-primary" : "text-muted-foreground"}`}>
+          <button key={t.id} onClick={() => setTab(t.id)} className={`flex flex-col items-center gap-0.5 px-0.5 text-[10px] ${tab === t.id ? "text-primary" : "text-muted-foreground"}`}>
             <t.icon className="h-5 w-5" />{t.label}
           </button>
         ))}
@@ -255,6 +262,124 @@ function SafetyTab() {
       {items.map(([t, d]) => (
         <div key={t} className={card}><p className="font-semibold">{t}</p><p className="text-sm text-muted-foreground">{d}</p></div>
       ))}
+    </>
+  );
+}
+
+const people = [
+  { name: "You", color: "bg-primary text-primary-foreground" },
+  { name: "Marta", color: "bg-rust text-primary-foreground" },
+  { name: "Jordi", color: "bg-accent text-accent-foreground" },
+  { name: "Aisha", color: "bg-secondary text-secondary-foreground" },
+];
+const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
+const plan: Record<string, Record<string, string[]>> = {
+  You: { Mon: ["Plants & living room"], Wed: ["Sort recycling"], Fri: ["Deep clean bathroom"] },
+  Marta: { Mon: ["Kitchen surfaces"], Tue: ["Mop floors"], Thu: ["General waste"], Sat: ["Deep clean kitchen"] },
+  Jordi: { Tue: ["Wash dishes"], Thu: ["Shared laundry"], Sun: ["Clean fridge"] },
+  Aisha: { Mon: ["Vacuum or sweep"], Wed: ["Balcony"], Fri: ["Kitchen surfaces"], Sun: ["General waste"] },
+};
+
+function HouseTab() {
+  const [view, setView] = useState<"day" | "week">("day");
+  const today = days[(new Date().getDay() + 6) % 7];
+  const [day, setDay] = useState<string>(today);
+  return (
+    <>
+      <div className="flex rounded-full bg-muted p-1">
+        {(["day", "week"] as const).map((v) => (
+          <button key={v} onClick={() => setView(v)} className={`flex-1 rounded-full py-2 text-sm font-semibold ${view === v ? "bg-card text-primary shadow-[var(--shadow-soft)]" : "text-muted-foreground"}`}>{v === "day" ? "Day" : "Whole week"}</button>
+        ))}
+      </div>
+      {view === "day" ? (
+        <>
+          <div className="flex justify-between gap-1">
+            {days.map((d) => (
+              <button key={d} onClick={() => setDay(d)} className={`flex-1 rounded-xl py-2 text-xs font-semibold ${day === d ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"}`}>{d}{d === today ? " •" : ""}</button>
+            ))}
+          </div>
+          {people.map((p) => {
+            const list = plan[p.name][day] ?? [];
+            return (
+              <div key={p.name} className={`${card} flex items-start gap-3`}>
+                <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-semibold ${p.color}`}>{p.name[0]}</span>
+                <div className="flex-1">
+                  <p className="font-semibold">{p.name}</p>
+                  {list.length ? list.map((c) => <p key={c} className="text-sm text-muted-foreground">🧱 {c}</p>) : <p className="text-sm text-muted-foreground">Day off 😎</p>}
+                </div>
+              </div>
+            );
+          })}
+        </>
+      ) : (
+        <div className={`${card} overflow-x-auto p-2`}>
+          <table className="w-full text-left text-xs">
+            <thead><tr><th className="p-1" />{people.map((p) => <th key={p.name} className="p-1 font-display text-primary">{p.name}</th>)}</tr></thead>
+            <tbody>
+              {days.map((d) => (
+                <tr key={d} className={`border-t ${d === today ? "bg-secondary" : ""}`}>
+                  <td className="p-1 font-semibold">{d}</td>
+                  {people.map((p) => <td key={p.name} className="p-1 align-top text-muted-foreground">{(plan[p.name][d] ?? ["—"]).join(", ")}</td>)}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </>
+  );
+}
+
+const avatars = ["🧱", "🦊", "🐼", "🌵", "🎧", "🍕", "🚲", "🌻"];
+function ProfileTab({ onSafety, onSave }: { onSafety: () => void; onSave: () => void }) {
+  const [name, setName] = useState("Lorenzo");
+  const [bio, setBio] = useState("Bathroom king, plant whisperer.");
+  const [avatar, setAvatar] = useState("🧱");
+  const [likes, setLikes] = useState<string[]>(["Plants & living room"]);
+  const [hidden, setHidden] = useState(false);
+  const [notify, setNotify] = useState(true);
+  const [away, setAway] = useState(false);
+  const [err, setErr] = useState("");
+  const pref = ["Deep clean bathroom", "Wash dishes", "Plants & living room", "Shared laundry", "Mop floors", "Sort recycling"];
+  const toggle = (label: string, v: boolean, set: (b: boolean) => void, sub: string) => (
+    <label className={`${card} flex items-center justify-between`}>
+      <span><span className="block font-semibold">{label}</span><span className="text-xs text-muted-foreground">{sub}</span></span>
+      <input type="checkbox" checked={v} onChange={() => set(!v)} className="h-5 w-5 accent-[var(--primary)]" />
+    </label>
+  );
+  return (
+    <>
+      <h2 className="text-lg font-semibold">My profile</h2>
+      <div className={`${card} text-center`}>
+        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-secondary text-4xl">{avatar}</div>
+        <div className="mt-3 flex flex-wrap justify-center gap-2">
+          {avatars.map((a) => <button key={a} onClick={() => setAvatar(a)} aria-label={`Avatar ${a}`} className={`h-9 w-9 rounded-full text-xl ${avatar === a ? "ring-2 ring-primary" : "bg-muted"}`}>{a}</button>)}
+        </div>
+      </div>
+      <div className={`${card} space-y-2`}>
+        <label className="text-xs font-semibold text-muted-foreground">Display name</label>
+        <input value={name} maxLength={40} onChange={(e) => setName(e.target.value)} className="w-full rounded-xl border bg-background px-3 py-2 text-sm" />
+        <label className="text-xs font-semibold text-muted-foreground">About me</label>
+        <input value={bio} maxLength={80} onChange={(e) => setBio(e.target.value)} className="w-full rounded-xl border bg-background px-3 py-2 text-sm" />
+        {err && <p className="text-xs text-destructive">{err}</p>}
+      </div>
+      <div className={card}>
+        <p className="font-semibold">Chores I prefer</p>
+        <p className="text-xs text-muted-foreground">We try to give you these first.</p>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {pref.map((c) => <button key={c} onClick={() => setLikes((l) => l.includes(c) ? l.filter((x) => x !== c) : [...l, c])} className={`rounded-full px-3 py-1 text-xs font-semibold ${likes.includes(c) ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground"}`}>{c}</button>)}
+        </div>
+      </div>
+      {toggle("Vacation mode", away, setAway, "Pauses your chores, keeps your streak")}
+      {toggle("Reminders", notify, setNotify, "A friendly nudge on chore day")}
+      {toggle("Hide me from global leaderboard", hidden, setHidden, "Your flat still sees your points")}
+      <button onClick={onSafety} className={`${card} flex w-full items-center gap-2 text-left font-semibold`}><ShieldCheck className="h-5 w-5 text-primary" />Safety & privacy checklist</button>
+      <button onClick={() => {
+        const r = commentSchema.safeParse(bio);
+        if (name.trim().length < 2) return setErr("Your name needs at least 2 letters.");
+        if (!r.success) return setErr(r.error.issues[0]?.message ?? "Check your About me");
+        setErr(""); onSave();
+      }} className={`${btn} w-full bg-primary py-3 text-primary-foreground`}>Save profile</button>
     </>
   );
 }
