@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import logo from "@/assets/brick_by_brick_logo.png.asset.json";
+const logo = { url: "/logo.svg" };
 import { emailSchema, passwordSchema } from "@/lib/safety";
 import { readStored, writeStored, accountSchema, DEFAULT_PROFILE, profileSchema } from "@/lib/store";
 

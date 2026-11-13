@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Home, CheckCheck, Repeat, Trophy, Ticket, ShieldCheck, Flame, Globe, Users, Building2, UserRound } from "lucide-react";
-import logo from "@/assets/brick_by_brick_logo.png.asset.json";
+const logo = { url: "/logo.svg" };
 import { commentSchema, createRateLimiter } from "@/lib/safety";
 import {
   DAYS, ME, PEOPLE, clearAllStored, removeStored, todayName,

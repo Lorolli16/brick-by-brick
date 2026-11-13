@@ -1,26 +1,25 @@
 # Brick by Brick
 
-Please show me how this app should look like.
-Add the security features in the photo.
-Add a feature to show a global leaderboard for the "best roommate".
+Fair chores for shared flats: split chores by effort points, approve each other's
+work, swap chores and climb the "best roommate" leaderboard.
 
-This project was built with [Lovable](https://lovable.dev).
+Started in Lovable; now developed locally.
 
-## Build with Lovable
+## Run it
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/26f9f48c-eeea-4d3e-9af0-04592e1d9e9c).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+Needs [Node.js](https://nodejs.org) 20 or newer.
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+npm install
+npm run dev        # http://localhost:5173 (port may vary; see terminal)
 ```
+
+Other scripts: `npm test` (Vitest), `npm run lint`, `npm run build`.
+
+## How data works
+
+There is no backend yet. Accounts, the flat, chores, approvals and your profile
+are saved in the browser's localStorage (keys start with `bxb.v1.`), see
+`src/lib/store.ts`. Passwords are never stored. Flatmates (Marta, Jordi, Aisha),
+leaderboards, swaps and chips are sample data until real accounts exist.
+Profile -> "Clear data on this device" resets everything.
