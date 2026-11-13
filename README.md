@@ -5,7 +5,7 @@ work, swap chores and climb the "best roommate" leaderboard.
 
 **Live preview:** https://lorolli16.github.io/brick-by-brick/
 
-**Design spec:** [docs/UX-UI-SPEC.md](docs/UX-UI-SPEC.md), full UX/UI description for rebuilding the app elsewhere.
+**Design spec (Word):** [docs/Brick-by-Brick-UX-UI-Spec.docx](docs/Brick-by-Brick-UX-UI-Spec.docx), full UX/UI description for rebuilding the app elsewhere.
 
 ## Run it locally
 
