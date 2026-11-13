@@ -282,7 +282,7 @@ const plan: Record<string, Record<string, string[]>> = {
 
 function HouseTab() {
   const [view, setView] = useState<"day" | "week">("day");
-  const today = days[(new Date().getDay() + 6) % 7];
+  const today: string = days[(new Date().getDay() + 6) % 7] ?? "Mon";
   const [day, setDay] = useState<string>(today);
   return (
     <>
@@ -299,7 +299,7 @@ function HouseTab() {
             ))}
           </div>
           {people.map((p) => {
-            const list = plan[p.name][day] ?? [];
+            const list = plan[p.name]?.[day] ?? [];
             return (
               <div key={p.name} className={`${card} flex items-start gap-3`}>
                 <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-semibold ${p.color}`}>{p.name[0]}</span>
@@ -319,7 +319,7 @@ function HouseTab() {
               {days.map((d) => (
                 <tr key={d} className={`border-t ${d === today ? "bg-secondary" : ""}`}>
                   <td className="p-1 font-semibold">{d}</td>
-                  {people.map((p) => <td key={p.name} className="p-1 align-top text-muted-foreground">{(plan[p.name][d] ?? ["—"]).join(", ")}</td>)}
+                  {people.map((p) => <td key={p.name} className="p-1 align-top text-muted-foreground">{(plan[p.name]?.[d] ?? ["—"]).join(", ")}</td>)}
                 </tr>
               ))}
             </tbody>
