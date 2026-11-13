@@ -19,3 +19,13 @@ export function createRateLimiter(max: number, windowMs: number, now: () => numb
     return true;
   };
 }
+
+// Household join code: exactly 6 letters/digits, case-insensitive.
+export const joinCodeSchema = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .regex(/^[A-Z0-9]{6}$/, "Codes are 6 letters or numbers");
+
+export const emailSchema = z.string().trim().email("That email looks off").max(255);
+export const passwordSchema = z.string().min(8, "At least 8 characters").max(72);

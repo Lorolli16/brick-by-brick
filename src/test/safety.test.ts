@@ -17,3 +17,15 @@ describe("safety", () => {
     expect(ok()).toBe(true);
   });
 });
+
+import { joinCodeSchema } from "@/lib/safety";
+describe("join code", () => {
+  it("accepts 6 alphanumeric chars, any case", () => {
+    expect(joinCodeSchema.parse("ab12cd")).toBe("AB12CD");
+  });
+  it("rejects 5 or 7 chars and symbols", () => {
+    expect(joinCodeSchema.safeParse("AB12C").success).toBe(false);
+    expect(joinCodeSchema.safeParse("AB12CD3").success).toBe(false);
+    expect(joinCodeSchema.safeParse("AB-2CD").success).toBe(false);
+  });
+});
